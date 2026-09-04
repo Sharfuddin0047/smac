@@ -5,16 +5,17 @@ on:
 
 jobs:
   build:
-    name: Build Android App
+    name: Build SMAC Android App
     runs-on: ubuntu-latest
 
     steps:
 
-      # Checkout project
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Java 11
+      # 2. JDK 17
+      # Required by the Android SDK command-line tools
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
@@ -22,29 +23,23 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      # Install Android SDK
+      # 3. Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # Install required Android SDK packages
-      - name: Install Android dependencies
-        run: |
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-37"
-          yes | sdkmanager --licenses
-
-      # Setup Gradle
+      # 4. Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Make Gradle executable
+      # 5. Make Gradle executable
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      # Verify environment
-      - name: Check Java
+      # 6. Check Java
+      - name: Check Java version
         run: java -version
 
-      - name: Check Gradle
+      # 7. Check Gradle
+      - name: Check Gradle version
         run: ./gradlew --version
 

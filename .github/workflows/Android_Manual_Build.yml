@@ -48,7 +48,7 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release.keystore
 
       # 9. Create local.properties for release signing
       - name: Create local.properties
@@ -58,7 +58,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           cat > local.properties <<EOF
-          RELEASE_STORE_FILE=app/release.keystore
+          RELEASE_STORE_FILE=release.keystore
           RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
           RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
           RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD

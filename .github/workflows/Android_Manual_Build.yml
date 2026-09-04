@@ -37,6 +37,7 @@ jobs:
 
       # 6. Check Java
       - name: Check Java version
+      - name: Check Java version
         run: java -version
 
       # 7. Check Gradle
@@ -96,10 +97,19 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      # 13. Upload APK
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
+      # 13. Rename APK
+      - name: Rename APK
+        run: |
+          VERSION_NAME="${{ steps.version.outputs.version_name }}"
+          cp app/build/outputs/apk/release/*.apk "SalesEdgeAI-v${VERSION_NAME}.apk"
+
+      # 14. Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: SMAC-Android-Release
-          path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
+          tag_name: v${{ steps.version.outputs.version_name }}
+          name: SalesEdgeAI v${{ steps.version.outputs.version_name }}
+          files: |
+            SalesEdgeAI-v${{ steps.version.outputs.version_name }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

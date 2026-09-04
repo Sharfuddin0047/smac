@@ -43,14 +43,42 @@ jobs:
       - name: Check Gradle version
         run: ./gradlew --version
 
-      # 8. Decode Android keystore
+      # 8. Calculate Version
+      - name: Calculate Version
+        id: version
+        run: |
+          RUN_NUMBER=${{ github.run_number }}
+          INDEX=$((RUN_NUMBER - 1))
+
+          PATCH=$((INDEX % 10))
+          VERSION_GROUP=$((INDEX / 10))
+
+          MAJOR=$((1 + VERSION_GROUP / 5))
+          MINOR=$(( (VERSION_GROUP % 5) * 2 ))
+
+          VERSION_NAME="${MAJOR}.${MINOR}.${PATCH}"
+
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+          echo "Version Code: $RUN_NUMBER"
+          echo "Version Name: $VERSION_NAME"
+
+      # 9. Version Bump
+      - name: Version Bump
+        uses: chkfung/android-version-actions@v1.2.2
+        with:
+          gradlePath: app/build.gradle.kts
+          versionCode: ${{ github.run_number }}
+          versionName: ${{ steps.version.outputs.version_name }}
+
+      # 10. Decode Android keystore
       - name: Decode Android keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release.keystore
 
-      # 9. Create local.properties for release signing
+      # 11. Create local.properties for release signing
       - name: Create local.properties
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -64,14 +92,14 @@ jobs:
           RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
           EOF
 
-      # 10. Build signed release APK
+      # 12. Build signed release APK
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      # 11. Upload APK
+      # 13. Upload APK
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: SMAC-Android-Release
-          path: android/app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error

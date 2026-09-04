@@ -43,3 +43,35 @@ jobs:
       - name: Check Gradle version
         run: ./gradlew --version
 
+      # 8. Decode Android keystore
+      - name: Decode Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+
+      # 9. Create local.properties for release signing
+      - name: Create local.properties
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cat > local.properties <<EOF
+          RELEASE_STORE_FILE=app/release.keystore
+          RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
+          RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
+          RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+          EOF
+
+      # 10. Build signed release APK
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      # 11. Upload APK
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SMAC-Android-Release
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
